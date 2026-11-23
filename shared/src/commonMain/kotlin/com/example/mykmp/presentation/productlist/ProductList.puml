@@ -1,4 +1,6 @@
 @startuml ProductList
+' Graphviz をインストールしていなくても表示できるよう、PlantUML 内蔵のレイアウトを使う
+!pragma layout smetana
 ' 商品一覧（ProductList）の MVI の流れ
 '
 ' Intent ──▶ Processor ──Action──▶ Reducer ──State──▶ UI
