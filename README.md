@@ -41,7 +41,7 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | フォルダ | 中身 |
 | --- | --- |
 | `mvi` | 全画面共通の土台。汎用 `Store<Intent, Action, State, SideEffect>`、`Processor`、`Reducer`、`storeScope()` |
-| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store と、流れの図 [`ProductList.svg`](./shared/src/commonMain/kotlin/com/example/mykmp/presentation/productlist/ProductList.svg)（元の PlantUML: [`ProductList.puml`](./shared/src/commonMain/kotlin/com/example/mykmp/presentation/productlist/ProductList.puml)） |
+| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store と、流れの図 [`ProductList.puml`](./shared/src/commonMain/kotlin/com/example/mykmp/presentation/productlist/ProductList.puml) |
 
 | 役割 | 何をするか |
 | --- | --- |
