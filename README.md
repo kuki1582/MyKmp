@@ -56,3 +56,15 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 
 - Android: `androidApp` の `ViewModel` が `viewModelScope` で Store を持つ（画面回転で作り直さないため）
 - iOS: [SKIE](https://skie.touchlab.co) により `StateFlow` / `Flow` を `for await` で、sealed を `onEnum(of:)` で扱う。Store は `KmpSdk.shared.createProductListStore()` で作り、破棄時に `close()` する
+
+### Data layer
+
+`shared/src/commonMain/.../data` 配下:
+
+| フォルダ | 中身 |
+| --- | --- |
+| `datasource/remote` | API 呼び出し（Ktor Client + kotlinx.serialization）。`ProductRemoteDataSource` が [DummyJSON](https://dummyjson.com/docs/products) の `GET /products` を呼ぶ |
+| `datasource/local` | データベース操作（今後追加予定） |
+| `repository` | DataSource を呼び、DTO をドメインモデルに変換する |
+
+HttpClient の共通設定は `datasource/remote/HttpClientFactory.kt`。エンジンだけ OS ごとに差し替える（Android: OkHttp / iOS: Darwin）。
