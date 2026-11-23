@@ -1,8 +1,5 @@
-package com.example.mykmp.presentation.store
+package com.example.mykmp.presentation.mvi
 
-import com.example.mykmp.presentation.processor.Processor
-import com.example.mykmp.presentation.processor.ProcessorOutput
-import com.example.mykmp.presentation.reducer.Reducer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel

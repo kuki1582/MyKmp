@@ -3,10 +3,10 @@ package com.example.mykmp.ui.productlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mykmp.di.KmpSdk
-import com.example.mykmp.presentation.intent.ProductListIntent
-import com.example.mykmp.presentation.sideEffect.ProductListSideEffect
-import com.example.mykmp.presentation.state.ProductListUiState
-import com.example.mykmp.presentation.store.ProductListStore
+import com.example.mykmp.presentation.productlist.ProductListIntent
+import com.example.mykmp.presentation.productlist.ProductListSideEffect
+import com.example.mykmp.presentation.productlist.ProductListUiState
+import com.example.mykmp.presentation.productlist.ProductListStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 

@@ -1,23 +1,17 @@
-package com.example.mykmp.presentation
+package com.example.mykmp.presentation.productlist
 
 import com.example.mykmp.domain.model.Product
 import com.example.mykmp.domain.repository.ProductRepository
 import com.example.mykmp.domain.usecase.GetProductsUseCase
-import com.example.mykmp.presentation.action.ProductListAction
-import com.example.mykmp.presentation.intent.ProductListIntent
-import com.example.mykmp.presentation.processor.ProcessorOutput
-import com.example.mykmp.presentation.processor.ProductListProcessor
-import com.example.mykmp.presentation.sideEffect.ProductListSideEffect
-import com.example.mykmp.presentation.state.ProductListUiState
-import com.example.mykmp.presentation.store.ProductListStore
+import com.example.mykmp.presentation.mvi.ProcessorOutput
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ProductListStoreTest {
     private val products = listOf(Product(id = "1", name = "医療機器A", price = 120))

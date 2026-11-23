@@ -1,7 +1,6 @@
-package com.example.mykmp.presentation.reducer
+package com.example.mykmp.presentation.productlist
 
-import com.example.mykmp.presentation.action.ProductListAction
-import com.example.mykmp.presentation.state.ProductListUiState
+import com.example.mykmp.presentation.mvi.Reducer
 
 internal object ProductListReducer : Reducer<ProductListUiState, ProductListAction> {
     override fun reduce(state: ProductListUiState, action: ProductListAction): ProductListUiState =

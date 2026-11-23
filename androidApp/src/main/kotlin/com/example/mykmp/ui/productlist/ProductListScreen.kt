@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mykmp.domain.model.Product
-import com.example.mykmp.presentation.intent.ProductListIntent
-import com.example.mykmp.presentation.sideEffect.ProductListSideEffect
-import com.example.mykmp.presentation.state.ProductListUiState
+import com.example.mykmp.presentation.productlist.ProductListIntent
+import com.example.mykmp.presentation.productlist.ProductListSideEffect
+import com.example.mykmp.presentation.productlist.ProductListUiState
 
 /** ViewModel と接続する画面のエントリポイント */
 @Composable

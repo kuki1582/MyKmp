@@ -1,9 +1,6 @@
-package com.example.mykmp.presentation
+package com.example.mykmp.presentation.productlist
 
 import com.example.mykmp.domain.model.Product
-import com.example.mykmp.presentation.action.ProductListAction
-import com.example.mykmp.presentation.reducer.ProductListReducer
-import com.example.mykmp.presentation.state.ProductListUiState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

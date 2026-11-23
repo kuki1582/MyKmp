@@ -1,10 +1,9 @@
-package com.example.mykmp.presentation.processor
+package com.example.mykmp.presentation.productlist
 
 import com.example.mykmp.domain.common.DomainResult
 import com.example.mykmp.domain.usecase.GetProductsUseCase
-import com.example.mykmp.presentation.action.ProductListAction
-import com.example.mykmp.presentation.intent.ProductListIntent
-import com.example.mykmp.presentation.sideEffect.ProductListSideEffect
+import com.example.mykmp.presentation.mvi.Processor
+import com.example.mykmp.presentation.mvi.ProcessorOutput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

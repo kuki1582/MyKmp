@@ -38,19 +38,21 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 
 `shared/src/commonMain/.../presentation` 配下:
 
-| フォルダ | 役割 |
+| フォルダ | 中身 |
 | --- | --- |
-| `intent` | ユーザーがしたいこと（UI から届く） |
-| `action` | 実際に起きたこと（Store 内部専用・internal） |
-| `processor` | Intent を受けて UseCase を呼び、Action / SideEffect を出す |
-| `reducer` | State + Action → 次の State（副作用なしの純粋関数） |
-| `state` | 画面の状態 |
-| `sideEffect` | 1 回だけ届けるイベント |
-| `store` | 汎用 `Store<Intent, Action, State, SideEffect>` と画面ごとの Store |
+| `mvi` | 全画面共通の土台。汎用 `Store<Intent, Action, State, SideEffect>`、`Processor`、`Reducer`、`storeScope()` |
+| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store と、流れの図 [`ProductList.puml`](./shared/src/commonMain/kotlin/com/example/mykmp/presentation/productlist/ProductList.puml) |
 
-図: [クラス図](./docs/uml/product-list-presentation-class.puml) / [シーケンス図](./docs/uml/product-list-presentation-sequence.puml)（PlantUML）
+| 役割 | 何をするか |
+| --- | --- |
+| Intent | ユーザーがしたいこと（UI から届く） |
+| Processor | Intent を受けて UseCase を呼び、Action / SideEffect を出す |
+| Action | 実際に起きたこと（Store 内部専用・internal） |
+| Reducer | State + Action → 次の State（副作用なしの純粋関数） |
+| State | 画面の状態 |
+| SideEffect | 1 回だけ届けるイベント |
 
-新しい画面では Intent / Action / State / SideEffect を定義し、Processor と Reducer を書いて画面ごとの Store から汎用 `Store` に渡すだけでよい。
+新しい画面は `presentation/<画面名>/` フォルダを作り、Intent / Action / State / SideEffect を定義して、Processor と Reducer を書き、画面ごとの Store から `mvi` の汎用 `Store` に渡すだけでよい。
 
 - Android: `androidApp` の `ViewModel` が `viewModelScope` で Store を持つ（画面回転で作り直さないため）
 - iOS: [SKIE](https://skie.touchlab.co) により `StateFlow` / `Flow` を `for await` で、sealed を `onEnum(of:)` で扱う。Store は `KmpSdk.shared.createProductListStore()` で作り、破棄時に `close()` する

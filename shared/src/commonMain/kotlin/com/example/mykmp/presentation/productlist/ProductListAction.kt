@@ -1,4 +1,4 @@
-package com.example.mykmp.presentation.action
+package com.example.mykmp.presentation.productlist
 
 import com.example.mykmp.domain.model.Product
 

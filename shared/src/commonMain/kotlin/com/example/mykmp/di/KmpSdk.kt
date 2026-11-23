@@ -3,8 +3,8 @@ package com.example.mykmp.di
 import com.example.mykmp.data.repository.ProductRepositoryImpl
 import com.example.mykmp.domain.repository.ProductRepository
 import com.example.mykmp.domain.usecase.GetProductsUseCase
-import com.example.mykmp.presentation.store.ProductListStore
-import com.example.mykmp.presentation.store.storeScope
+import com.example.mykmp.presentation.mvi.storeScope
+import com.example.mykmp.presentation.productlist.ProductListStore
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module

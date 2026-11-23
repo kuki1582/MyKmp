@@ -1,4 +1,4 @@
-package com.example.mykmp.presentation.store
+package com.example.mykmp.presentation.mvi
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -1,4 +1,4 @@
-package com.example.mykmp.presentation.processor
+package com.example.mykmp.presentation.mvi
 
 import kotlinx.coroutines.flow.Flow
 

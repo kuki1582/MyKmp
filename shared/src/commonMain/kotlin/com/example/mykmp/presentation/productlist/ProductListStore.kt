@@ -1,11 +1,7 @@
-package com.example.mykmp.presentation.store
+package com.example.mykmp.presentation.productlist
 
 import com.example.mykmp.domain.usecase.GetProductsUseCase
-import com.example.mykmp.presentation.intent.ProductListIntent
-import com.example.mykmp.presentation.processor.ProductListProcessor
-import com.example.mykmp.presentation.reducer.ProductListReducer
-import com.example.mykmp.presentation.sideEffect.ProductListSideEffect
-import com.example.mykmp.presentation.state.ProductListUiState
+import com.example.mykmp.presentation.mvi.Store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
