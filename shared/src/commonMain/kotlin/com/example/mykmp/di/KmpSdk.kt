@@ -48,7 +48,7 @@ object KmpSdk{
 
     /**
      * アプリ起動時に一度だけ呼ぶ初期化メソッド
-     * - Android: `KmpSdk.initialize(applicationContext)`
+     * - Android: `KmpSdk.initialize(PlatformContext(this))`（Application から）
      * - iOS: `KmpSdk.shared.initialize(context: PlatformContext())`
      */
     fun initialize(context: PlatformContext){
