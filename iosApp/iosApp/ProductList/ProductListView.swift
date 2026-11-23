@@ -16,6 +16,7 @@ struct ProductListView: View {
         }
         .task {
             observable.load()
+            await observable.observe()
         }
     }
 

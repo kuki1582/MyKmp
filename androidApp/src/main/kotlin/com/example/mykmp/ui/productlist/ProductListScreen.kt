@@ -26,25 +26,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mykmp.di.KmpSdk
 import com.example.mykmp.domain.model.Product
 import com.example.mykmp.presentation.intent.ProductListIntent
 import com.example.mykmp.presentation.sideEffect.ProductListSideEffect
 import com.example.mykmp.presentation.state.ProductListUiState
-import com.example.mykmp.presentation.viewmodel.ProductListViewModel
 
 /** ViewModel と接続する画面のエントリポイント */
 @Composable
 fun ProductListRoute(
     onNavigateToDetail: (id: String) -> Unit,
-    viewModel: ProductListViewModel = viewModel {
-        ProductListViewModel(KmpSdk.getProductsUseCase())
-    },
+    viewModel: ProductListViewModel = viewModel { ProductListViewModel() },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.onIntent(ProductListIntent.Load)
+        viewModel.dispatch(ProductListIntent.Load)
     }
 
     LaunchedEffect(viewModel) {
@@ -55,7 +51,7 @@ fun ProductListRoute(
         }
     }
 
-    ProductListScreen(state = state, onIntent = viewModel::onIntent)
+    ProductListScreen(state = state, onIntent = viewModel::dispatch)
 }
 
 /** 状態だけを受け取って描画する画面（Preview・テスト用に ViewModel から切り離している） */
