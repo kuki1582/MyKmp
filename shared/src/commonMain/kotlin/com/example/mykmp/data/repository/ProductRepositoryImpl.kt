@@ -1,7 +1,7 @@
-package com.example.kmp.data.repository
+package com.example.mykmp.data.repository
 
-import com.example.kmp.domain.model.Product
-import com.example.kmp.domain.repository.ProductRepository
+import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.repository.ProductRepository
 import io.ktor.client.HttpClient
 
 internal class ProductRepositoryImpl(

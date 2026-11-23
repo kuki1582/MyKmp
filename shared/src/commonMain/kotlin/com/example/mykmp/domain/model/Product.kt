@@ -1,4 +1,4 @@
-package com.example.kmp.domain.model
+package com.example.mykmp.domain.model
 
 data class Product(
     val id: String,

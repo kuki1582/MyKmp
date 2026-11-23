@@ -1,4 +1,4 @@
-package com.example.kmp.domain.common
+package com.example.mykmp.domain.common
 
 sealed interface DomainResult<out T>{
     data class Success<T>(val data: T): DomainResult<T>

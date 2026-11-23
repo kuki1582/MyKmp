@@ -1,8 +1,8 @@
-package com.example.kmp.di
+package com.example.mykmp.di
 
-import com.example.kmp.data.repository.ProductRepositoryImpl
-import com.example.kmp.domain.repository.ProductRepository
-import com.example.kmp.domain.usecase.GetProductsUseCase
+import com.example.mykmp.data.repository.ProductRepositoryImpl
+import com.example.mykmp.domain.repository.ProductRepository
+import com.example.mykmp.domain.usecase.GetProductsUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication

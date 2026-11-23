@@ -1,7 +1,7 @@
-package com.example.kmp
+package com.example.mykmp
 
-import com.example.kmp.di.KmpSdk
-import com.example.kmp.domain.usecase.GetProductsUseCase
+import com.example.mykmp.di.KmpSdk
+import com.example.mykmp.domain.usecase.GetProductsUseCase
 
 object IosUseCaseProvider{
     fun initialize(){

@@ -1,8 +1,8 @@
-package com.example.kmp.domain.usecase
+package com.example.mykmp.domain.usecase
 
-import com.example.kmp.domain.common.DomainResult
-import com.example.kmp.domain.model.Product
-import com.example.kmp.domain.repository.ProductRepository
+import com.example.mykmp.domain.common.DomainResult
+import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.repository.ProductRepository
 
 class GetProductsUseCase(
     private val repository: ProductRepository
