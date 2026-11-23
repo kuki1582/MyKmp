@@ -48,6 +48,8 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | `sideEffect` | 1 回だけ届けるイベント |
 | `store` | 汎用 `Store<Intent, Action, State, SideEffect>` と画面ごとの Store |
 
+図: [クラス図](./docs/uml/product-list-presentation-class.puml) / [シーケンス図](./docs/uml/product-list-presentation-sequence.puml)（PlantUML）
+
 新しい画面では Intent / Action / State / SideEffect を定義し、Processor と Reducer を書いて画面ごとの Store から汎用 `Store` に渡すだけでよい。
 
 - Android: `androidApp` の `ViewModel` が `viewModelScope` で Store を持つ（画面回転で作り直さないため）
