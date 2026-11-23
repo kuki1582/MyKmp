@@ -1,6 +1,7 @@
 package com.example.mykmp.data.datasource.remote
 
 import com.example.mykmp.data.model.CategoryDto
+import com.example.mykmp.data.model.ProductDetailDto
 import com.example.mykmp.data.model.ProductsResponseDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -21,6 +22,10 @@ internal class ProductRemoteDataSource(
             parameter("limit", 30)
             parameter("select", "title,price,category")
         }.body()
+
+    /** 商品 1 件の詳細。全項目を取る */
+    suspend fun getProduct(id: String): ProductDetailDto =
+        httpClient.get("$BASE_URL/products/$id").body()
 
     /** カテゴリ一覧。使うのは slug / name だけ */
     suspend fun getCategories(): List<CategoryDto> =

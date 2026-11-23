@@ -42,6 +42,7 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | --- | --- |
 | `mvi` | 全画面共通の土台。汎用 `Store<Intent, Action, State, SideEffect>`、`Processor`、`Reducer`、`storeScope()` |
 | `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store |
+| `productdetail` | 商品詳細画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store |
 
 | 役割 | 何をするか |
 | --- | --- |
@@ -63,7 +64,7 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 
 | フォルダ | 中身 |
 | --- | --- |
-| `datasource/remote` | API 呼び出し（Ktor Client + kotlinx.serialization）。`ProductRemoteDataSource` が [DummyJSON](https://dummyjson.com/docs/products) の `GET /products` を呼ぶ |
+| `datasource/remote` | API 呼び出し（Ktor Client + kotlinx.serialization）。`ProductRemoteDataSource` が [DummyJSON](https://dummyjson.com/docs/products) の `GET /products`、`GET /products/{id}`、`GET /products/categories` を呼ぶ |
 | `datasource/local` | データベース操作（SQLDelight）。商品のキャッシュ（`ProductLocalDataSource`）とお気に入り（`FavoriteLocalDataSource`）。スキーマは `shared/src/commonMain/sqldelight/` |
 | `model` | data 層のモデル。API のレスポンス（`ProductDto`、`CategoryDto`）。DB の `ProductEntity` は SQLDelight が `.sq` から生成する |
 | `mapper` | data 層のモデル → ドメインモデル（`Product`）への変換 |

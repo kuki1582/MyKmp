@@ -1,6 +1,7 @@
 package com.example.mykmp.domain.repository
 
 import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.model.ProductDetail
 import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
@@ -9,4 +10,7 @@ interface ProductRepository {
 
     /** 最新の商品を取得して保存する。失敗したら例外を投げる */
     suspend fun refreshProducts()
+
+    /** 商品 1 件の詳細を取得する。失敗したら例外を投げる */
+    suspend fun getProductDetail(id: String): ProductDetail
 }

@@ -110,6 +110,8 @@ private class FakeProductRepository : ProductRepository {
     override fun observeProducts(): Flow<List<Product>> = products
 
     override suspend fun refreshProducts() = onRefresh()
+
+    override suspend fun getProductDetail(id: String) = error("一覧のテストでは使わない")
 }
 
 private class FakeFavoriteRepository : FavoriteRepository {

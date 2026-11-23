@@ -1,8 +1,12 @@
 package com.example.mykmp.data.mapper
 
 import com.example.mykmp.data.datasource.local.db.ProductEntity
+import com.example.mykmp.data.model.ProductDetailDto
 import com.example.mykmp.data.model.ProductDto
+import com.example.mykmp.data.model.ReviewDto
 import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.model.ProductDetail
+import com.example.mykmp.domain.model.Review
 import kotlin.math.roundToInt
 
 /*
@@ -38,4 +42,36 @@ internal fun Product.toEntity(): ProductEntity = ProductEntity(
     name = name,
     price = price.toLong(),
     categoryName = categoryName,
+)
+
+/**
+ * 詳細 API の形（ProductDetailDto）→ ProductDetail
+ *
+ * @param categoryNames categories API から作った「slug → 表示名」の対応表
+ */
+internal fun ProductDetailDto.toDomain(categoryNames: Map<String, String>): ProductDetail = ProductDetail(
+    id = id.toString(),
+    name = title,
+    description = description,
+    categoryName = categoryNames[category] ?: category,
+    // 一覧と同じく、ドルを四捨五入して Int にしている
+    price = price.roundToInt(),
+    discountPercentage = discountPercentage,
+    rating = rating,
+    stock = stock,
+    brand = brand,
+    availabilityStatus = availabilityStatus,
+    warrantyInformation = warrantyInformation,
+    shippingInformation = shippingInformation,
+    returnPolicy = returnPolicy,
+    imageUrls = images,
+    reviews = reviews.map { it.toDomain() },
+)
+
+internal fun ReviewDto.toDomain(): Review = Review(
+    rating = rating,
+    comment = comment,
+    reviewerName = reviewerName,
+    // "2024-05-23T08:56:21.618Z" → "2024-05-23"（表示は日付だけでよいので先頭 10 文字）
+    date = date.take(10),
 )

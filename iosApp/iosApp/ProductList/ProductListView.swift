@@ -10,9 +10,7 @@ struct ProductListView: View {
                 .navigationTitle("商品一覧（お気に入り \(observable.state.favoriteCount) 件）")
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationDestination(item: $observable.navigateToDetailId) { id in
-                    // TODO: 詳細画面ができたら置き換える
-                    Text("商品ID: \(id)")
-                        .navigationTitle("商品詳細")
+                    ProductDetailView(productId: id)
                 }
         }
         .alert(

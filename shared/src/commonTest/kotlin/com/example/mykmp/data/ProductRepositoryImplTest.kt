@@ -9,6 +9,7 @@ import com.example.mykmp.data.mapper.toEntity
 import com.example.mykmp.data.repository.ProductRepositoryImpl
 import com.example.mykmp.domain.common.DomainResult
 import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.model.Review
 import com.example.mykmp.domain.usecase.RefreshProductsUseCase
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -83,6 +84,34 @@ class ProductRepositoryImplTest {
             ),
             local.products.value.map { it.toDomain() },
         )
+    }
+
+    @Test
+    fun getProductDetail_combinesDetailAndCategoryName() = runTest {
+        val detailJson = """
+            {
+              "id": 1, "title": "Essence Mascara Lash Princess", "description": "Popular mascara",
+              "category": "beauty", "price": 9.99, "discountPercentage": 7.17, "rating": 4.94, "stock": 5,
+              "brand": "Essence", "availabilityStatus": "Low Stock",
+              "images": ["https://cdn.dummyjson.com/1.png"],
+              "reviews": [{ "rating": 2, "comment": "Very unhappy!", "reviewerName": "John Doe", "date": "2024-05-23T08:56:21.618Z" }]
+            }
+        """.trimIndent()
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/products/1" -> respond(detailJson, HttpStatusCode.OK, jsonHeaders)
+                "/products/categories" -> respond(categoriesJson, HttpStatusCode.OK, jsonHeaders)
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        }
+
+        val detail = repository(engine).getProductDetail("1")
+
+        assertEquals("Beauty", detail.categoryName)
+        assertEquals(10, detail.price)
+        assertEquals("Essence", detail.brand)
+        assertEquals(listOf("https://cdn.dummyjson.com/1.png"), detail.imageUrls)
+        assertEquals(Review(rating = 2, comment = "Very unhappy!", reviewerName = "John Doe", date = "2024-05-23"), detail.reviews.single())
     }
 
     @Test
