@@ -14,7 +14,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
 class ProductListStoreTest {
-    private val products = listOf(Product(id = "1", name = "医療機器A", price = 120))
+    private val products = listOf(Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療"))
 
     private fun useCase(result: () -> List<Product>) = GetProductsUseCase(
         object : ProductRepository {

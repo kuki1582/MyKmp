@@ -5,7 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ProductListReducerTest {
-    private val products = listOf(Product(id = "1", name = "医療機器A", price = 120))
+    private val products = listOf(Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療"))
 
     @Test
     fun loadStarted_setsLoadingAndClearsError() {
