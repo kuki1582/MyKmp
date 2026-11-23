@@ -78,6 +78,22 @@ class ProductListStoreTest {
     }
 
     @Test
+    fun toggleFavoriteFailure_emitsShowMessageAndKeepsItems() = runTest {
+        productRepository.products.value = listOf(productA)
+        favoriteRepository.failToggle = true
+        val store = store()
+        store.dispatch(ProductListIntent.Load)
+
+        store.dispatch(ProductListIntent.ToggleFavorite("1"))
+
+        assertEquals(
+            ProductListSideEffect.ShowMessage("お気に入りを変更できませんでした"),
+            store.sideEffect.first(),
+        )
+        assertEquals(listOf(false), store.state.value.items.map { it.isFavorite })
+    }
+
+    @Test
     fun clickProduct_emitsNavigateSideEffect() = runTest {
         val store = store()
 
@@ -98,10 +114,12 @@ private class FakeProductRepository : ProductRepository {
 
 private class FakeFavoriteRepository : FavoriteRepository {
     val ids = MutableStateFlow<Set<String>>(emptySet())
+    var failToggle = false
 
     override fun observeFavoriteIds(): Flow<Set<String>> = ids
 
     override suspend fun toggleFavorite(productId: String) {
+        if (failToggle) error("db error")
         ids.value = if (productId in ids.value) ids.value - productId else ids.value + productId
     }
 }

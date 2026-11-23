@@ -12,6 +12,9 @@ final class ProductListObservable: ObservableObject {
     /// 詳細画面への遷移要求（SideEffect）。View 側で監視して画面遷移する
     @Published var navigateToDetailId: String?
 
+    /// 1 回だけ表示するメッセージ（SideEffect）。View 側でアラートを出し、閉じたら nil に戻る
+    @Published var message: String?
+
     private let store: ProductListStore
 
     init() {
@@ -59,6 +62,8 @@ final class ProductListObservable: ObservableObject {
         switch onEnum(of: effect) {
         case .navigateToDetail(let navigate):
             navigateToDetailId = navigate.id
+        case .showMessage(let show):
+            message = show.message
         }
     }
 }

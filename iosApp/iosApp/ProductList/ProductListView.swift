@@ -15,6 +15,15 @@ struct ProductListView: View {
                         .navigationTitle("商品詳細")
                 }
         }
+        .alert(
+            observable.message ?? "",
+            isPresented: Binding(
+                get: { observable.message != nil },
+                set: { if !$0 { observable.message = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        }
         .task {
             await observable.observe()
         }

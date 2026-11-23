@@ -37,8 +37,15 @@ internal class ProductListProcessor(
             is ProductListIntent.ClickProduct ->
                 flow { emit(ProcessorOutput.SideEffect(ProductListSideEffect.NavigateToDetail(intent.id))) }
 
-            // DB を書き換えるだけ。結果は items() の Flow を通って自動で画面に反映される
-            is ProductListIntent.ToggleFavorite -> flow { toggleFavorite(intent.id) }
+            is ProductListIntent.ToggleFavorite -> flow {
+                when (val result = toggleFavorite(intent.id)) {
+                    // 成功時は何も返さない。DB が変わり、監視中の items() から ItemsUpdated が届く
+                    is DomainResult.Success -> Unit
+                    // 失敗は 1 回だけ伝えればよいので SideEffect にする
+                    is DomainResult.Error ->
+                        emit(ProcessorOutput.SideEffect(ProductListSideEffect.ShowMessage(result.message)))
+                }
+            }
         }
 
     /**
