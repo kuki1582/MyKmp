@@ -8,32 +8,28 @@ import com.example.mykmp.domain.model.Product
 import com.example.mykmp.domain.repository.ProductRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /**
  * 商品の Repository。API（remote）と DB（local）の両方を使う。
  *
- * 1. API から取得できたら DB に保存して、その結果を返す
- * 2. API が失敗したら、DB に保存してある前回の結果を返す（オフラインでも表示できる）
- * 3. DB も空なら、API のエラーをそのまま投げる（UseCase で DomainResult.Error になる）
+ * 画面に出すデータは常に DB から流す（DB を唯一の情報源にする）。
+ * - [observeProducts]：DB の商品を Flow で流す。DB が書き換わると自動で新しい一覧が流れる
+ * - [refreshProducts]：API から取得して DB に保存する。失敗しても DB の前回の結果は表示されたまま
  */
 internal class ProductRepositoryImpl(
     private val remoteDataSource: ProductRemoteDataSource,
     private val localDataSource: ProductLocalDataSource,
 ) : ProductRepository {
 
-    override suspend fun fetchProducts(): List<Product> =
-        try {
-            val products = fetchFromRemote()
-            localDataSource.replaceProducts(products.map { it.toEntity() })
-            products
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            val cached = localDataSource.getProducts()
-            if (cached.isEmpty()) throw e
-            cached.map { it.toDomain() }
-        }
+    override fun observeProducts(): Flow<List<Product>> =
+        localDataSource.observeProducts().map { entities -> entities.map { it.toDomain() } }
+
+    override suspend fun refreshProducts() {
+        val products = fetchFromRemote()
+        localDataSource.replaceProducts(products.map { it.toEntity() })
+    }
 
     /**
      * 2 つの API の結果を一部ずつ使って Product を作る。

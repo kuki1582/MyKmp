@@ -1,74 +1,107 @@
 package com.example.mykmp.presentation.productlist
 
 import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.repository.FavoriteRepository
 import com.example.mykmp.domain.repository.ProductRepository
-import com.example.mykmp.domain.usecase.GetProductsUseCase
-import com.example.mykmp.presentation.mvi.ProcessorOutput
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import com.example.mykmp.domain.usecase.ObserveFavoriteIdsUseCase
+import com.example.mykmp.domain.usecase.ObserveProductsUseCase
+import com.example.mykmp.domain.usecase.RefreshProductsUseCase
+import com.example.mykmp.domain.usecase.ToggleFavoriteUseCase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ProductListStoreTest {
-    private val products = listOf(Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療"))
+    private val productA = Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療")
+    private val productB = Product(id = "2", name = "医療機器B", price = 3400, categoryName = "医療")
 
-    private fun useCase(result: () -> List<Product>) = GetProductsUseCase(
-        object : ProductRepository {
-            override suspend fun fetchProducts(): List<Product> = result()
-        },
+    private val productRepository = FakeProductRepository()
+    private val favoriteRepository = FakeFavoriteRepository()
+
+    private fun TestScope.store() = ProductListStore(
+        observeProducts = ObserveProductsUseCase(productRepository),
+        observeFavoriteIds = ObserveFavoriteIdsUseCase(favoriteRepository),
+        refreshProducts = RefreshProductsUseCase(productRepository),
+        toggleFavorite = ToggleFavoriteUseCase(favoriteRepository),
+        // dispatch した処理がすぐ進むように Unconfined にし、テスト終了時に止まる backgroundScope にぶら下げる
+        scope = CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
     )
 
     @Test
-    fun processor_load_emitsStartedThenSucceeded() = runTest {
-        val processor = ProductListProcessor(useCase { products })
-
-        val outputs = processor.process(ProductListIntent.Load).toList()
-
-        assertEquals(
-            listOf(
-                ProcessorOutput.Action(ProductListAction.LoadStarted),
-                ProcessorOutput.Action(ProductListAction.LoadSucceeded(products)),
-            ),
-            outputs,
-        )
-    }
-
-    @Test
-    fun processor_load_emitsFailedOnError() = runTest {
-        val processor = ProductListProcessor(useCase { error("network") })
-
-        val outputs = processor.process(ProductListIntent.Load).toList()
-
-        assertEquals(
-            ProcessorOutput.Action(ProductListAction.LoadFailed("失敗した")),
-            outputs.last(),
-        )
-    }
-
-    @Test
-    fun store_load_updatesState() = runTest {
-        val store = ProductListStore(useCase { products }, storeScope())
+    fun load_combinesProductsAndFavorites() = runTest {
+        productRepository.onRefresh = { productRepository.products.value = listOf(productA, productB) }
+        favoriteRepository.ids.value = setOf("2")
+        val store = store()
 
         store.dispatch(ProductListIntent.Load)
 
-        assertEquals(ProductListUiState(products = products), store.state.value)
+        assertEquals(
+            ProductListUiState(
+                items = listOf(
+                    ProductListItem(productA, isFavorite = false),
+                    ProductListItem(productB, isFavorite = true),
+                ),
+                favoriteCount = 1,
+            ),
+            store.state.value,
+        )
     }
 
     @Test
-    fun store_clickProduct_emitsNavigateSideEffect() = runTest {
-        val store = ProductListStore(useCase { products }, storeScope())
+    fun toggleFavorite_updatesItemsThroughCombinedFlow() = runTest {
+        productRepository.products.value = listOf(productA, productB)
+        val store = store()
+        store.dispatch(ProductListIntent.Load)
+
+        store.dispatch(ProductListIntent.ToggleFavorite("1"))
+
+        assertEquals(listOf(true, false), store.state.value.items.map { it.isFavorite })
+        assertEquals(1, store.state.value.favoriteCount)
+    }
+
+    @Test
+    fun refreshFailure_showsErrorAndKeepsCachedItems() = runTest {
+        productRepository.products.value = listOf(productA)
+        productRepository.onRefresh = { error("network") }
+        val store = store()
+
+        store.dispatch(ProductListIntent.Load)
+
+        assertEquals("失敗した", store.state.value.errorMessage)
+        assertEquals(listOf(productA), store.state.value.items.map { it.product })
+    }
+
+    @Test
+    fun clickProduct_emitsNavigateSideEffect() = runTest {
+        val store = store()
 
         store.dispatch(ProductListIntent.ClickProduct("1"))
 
         assertEquals(ProductListSideEffect.NavigateToDetail("1"), store.sideEffect.first())
     }
+}
 
+private class FakeProductRepository : ProductRepository {
+    val products = MutableStateFlow<List<Product>>(emptyList())
+    var onRefresh: () -> Unit = {}
 
-    /** dispatch した処理がすぐ終わるように Unconfined にし、テスト終了時に止まる backgroundScope にぶら下げる */
-    private fun TestScope.storeScope() =
-        CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler))
+    override fun observeProducts(): Flow<List<Product>> = products
+
+    override suspend fun refreshProducts() = onRefresh()
+}
+
+private class FakeFavoriteRepository : FavoriteRepository {
+    val ids = MutableStateFlow<Set<String>>(emptySet())
+
+    override fun observeFavoriteIds(): Flow<Set<String>> = ids
+
+    override suspend fun toggleFavorite(productId: String) {
+        ids.value = if (productId in ids.value) ids.value - productId else ids.value + productId
+    }
 }

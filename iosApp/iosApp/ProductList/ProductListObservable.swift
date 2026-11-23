@@ -17,6 +17,8 @@ final class ProductListObservable: ObservableObject {
     init() {
         store = KmpSdk.shared.createProductListStore()
         state = store.state.value
+        // 監視を始める Load は 1 回だけ送る（.task は画面が出直すたびに呼ばれるので、ここで送る）
+        store.dispatch(intent: ProductListIntentLoad.shared)
     }
 
     deinit {
@@ -40,12 +42,16 @@ final class ProductListObservable: ObservableObject {
         }
     }
 
-    func load() {
-        store.dispatch(intent: ProductListIntentLoad.shared)
+    func refresh() {
+        store.dispatch(intent: ProductListIntentRefresh.shared)
     }
 
     func clickProduct(id: String) {
         store.dispatch(intent: ProductListIntentClickProduct(id: id))
+    }
+
+    func toggleFavorite(id: String) {
+        store.dispatch(intent: ProductListIntentToggleFavorite(id: id))
     }
 
     private func handle(_ effect: ProductListSideEffect) {

@@ -64,9 +64,9 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | フォルダ | 中身 |
 | --- | --- |
 | `datasource/remote` | API 呼び出し（Ktor Client + kotlinx.serialization）。`ProductRemoteDataSource` が [DummyJSON](https://dummyjson.com/docs/products) の `GET /products` を呼ぶ |
-| `datasource/local` | データベース操作（SQLDelight）。`ProductLocalDataSource` が商品をキャッシュする。スキーマは `shared/src/commonMain/sqldelight/` |
+| `datasource/local` | データベース操作（SQLDelight）。商品のキャッシュ（`ProductLocalDataSource`）とお気に入り（`FavoriteLocalDataSource`）。スキーマは `shared/src/commonMain/sqldelight/` |
 | `model` | data 層のモデル。API のレスポンス（`ProductDto`、`CategoryDto`）。DB の `ProductEntity` は SQLDelight が `.sq` から生成する |
 | `mapper` | data 層のモデル → ドメインモデル（`Product`）への変換 |
-| `repository` | DataSource を呼び、mapper でドメインモデルに変換して返す。API の結果を DB に保存し、API が失敗したら DB の結果を返す |
+| `repository` | DataSource を呼び、mapper でドメインモデルに変換する。画面には常に DB の内容を Flow で流し、API の結果は DB に保存する（API が失敗しても前回の一覧が表示される） |
 
 HttpClient の共通設定は `datasource/remote/HttpClientFactory.kt`。エンジンだけ OS ごとに差し替える（Android: OkHttp / iOS: Darwin）。

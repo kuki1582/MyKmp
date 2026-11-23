@@ -9,13 +9,16 @@ import com.example.mykmp.data.mapper.toEntity
 import com.example.mykmp.data.repository.ProductRepositoryImpl
 import com.example.mykmp.domain.common.DomainResult
 import com.example.mykmp.domain.model.Product
-import com.example.mykmp.domain.usecase.GetProductsUseCase
+import com.example.mykmp.domain.usecase.RefreshProductsUseCase
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -48,20 +51,12 @@ class ProductRepositoryImplTest {
     private fun repository(engine: MockEngine) =
         ProductRepositoryImpl(ProductRemoteDataSource(createHttpClient(engine)), local)
 
-    private val successEngine = MockEngine { request ->
-        when (request.url.encodedPath) {
-            "/products" -> respond(productsJson, HttpStatusCode.OK, jsonHeaders)
-            "/products/categories" -> respond(categoriesJson, HttpStatusCode.OK, jsonHeaders)
-            else -> respondError(HttpStatusCode.NotFound)
-        }
-    }
-
     private val failingEngine = MockEngine { respondError(HttpStatusCode.InternalServerError) }
 
     private val cachedProduct = Product(id = "99", name = "キャッシュ済みの商品", price = 5, categoryName = "Cache")
 
     @Test
-    fun fetchProducts_combinesProductsAndCategories() = runTest {
+    fun refreshProducts_combinesTwoApisAndSavesToLocal() = runTest {
         val requested = mutableListOf<String>()
         val engine = MockEngine { request ->
             requested += request.url.toString()
@@ -72,7 +67,7 @@ class ProductRepositoryImplTest {
             }
         }
 
-        val products = repository(engine).fetchProducts()
+        repository(engine).refreshProducts()
 
         assertEquals(
             setOf(
@@ -86,35 +81,29 @@ class ProductRepositoryImplTest {
                 Product(id = "1", name = "Essence Mascara Lash Princess", price = 10, categoryName = "Beauty"),
                 Product(id = "6", name = "Calvin Klein CK One", price = 50, categoryName = "Fragrances"),
             ),
-            products,
+            local.products.value.map { it.toDomain() },
         )
     }
 
     @Test
-    fun fetchProducts_savesApiResultToLocal() = runTest {
-        val products = repository(successEngine).fetchProducts()
+    fun observeProducts_emitsProductsFromLocal() = runTest {
+        local.products.value = listOf(cachedProduct.toEntity())
 
-        assertEquals(products, local.saved.map { it.toDomain() })
+        assertEquals(listOf(cachedProduct), repository(failingEngine).observeProducts().first())
     }
 
     @Test
-    fun fetchProducts_returnsCachedProducts_whenApiFails() = runTest {
-        local.saved = listOf(cachedProduct.toEntity())
+    fun refreshFailure_keepsCachedProducts() = runTest {
+        local.products.value = listOf(cachedProduct.toEntity())
 
-        val products = repository(failingEngine).fetchProducts()
-
-        assertEquals(listOf(cachedProduct), products)
-    }
-
-    @Test
-    fun useCase_returnsError_whenApiFailsAndCacheIsEmpty() = runTest {
-        val result = GetProductsUseCase(repository(failingEngine))()
+        val result = RefreshProductsUseCase(repository(failingEngine))()
 
         assertIs<DomainResult.Error>(result)
+        assertEquals(listOf(cachedProduct.toEntity()), local.products.value)
     }
 
     @Test
-    fun useCase_returnsError_whenCategoriesApiFails() = runTest {
+    fun refresh_returnsError_whenCategoriesApiFails() = runTest {
         val engine = MockEngine { request ->
             when (request.url.encodedPath) {
                 "/products" -> respond(productsJson, HttpStatusCode.OK, jsonHeaders)
@@ -122,19 +111,19 @@ class ProductRepositoryImplTest {
             }
         }
 
-        val result = GetProductsUseCase(repository(engine))()
+        val result = RefreshProductsUseCase(repository(engine))()
 
         assertIs<DomainResult.Error>(result)
     }
 }
 
-/** テスト用のローカル DB。メモリ上のリストに保存するだけ */
+/** テスト用のローカル DB。メモリ上に保存するだけ */
 private class FakeProductLocalDataSource : ProductLocalDataSource {
-    var saved: List<ProductEntity> = emptyList()
+    val products = MutableStateFlow<List<ProductEntity>>(emptyList())
 
-    override suspend fun getProducts(): List<ProductEntity> = saved
+    override fun observeProducts(): Flow<List<ProductEntity>> = products
 
     override suspend fun replaceProducts(products: List<ProductEntity>) {
-        saved = products
+        this.products.value = products
     }
 }

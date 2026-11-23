@@ -1,6 +1,9 @@
 package com.example.mykmp.presentation.productlist
 
-import com.example.mykmp.domain.usecase.GetProductsUseCase
+import com.example.mykmp.domain.usecase.ObserveFavoriteIdsUseCase
+import com.example.mykmp.domain.usecase.ObserveProductsUseCase
+import com.example.mykmp.domain.usecase.RefreshProductsUseCase
+import com.example.mykmp.domain.usecase.ToggleFavoriteUseCase
 import com.example.mykmp.presentation.mvi.Store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -15,12 +18,15 @@ import kotlinx.coroutines.flow.StateFlow
  * @param scope Android では viewModelScope、iOS では storeScope() を渡す。
  */
 class ProductListStore internal constructor(
-    getProducts: GetProductsUseCase,
+    observeProducts: ObserveProductsUseCase,
+    observeFavoriteIds: ObserveFavoriteIdsUseCase,
+    refreshProducts: RefreshProductsUseCase,
+    toggleFavorite: ToggleFavoriteUseCase,
     scope: CoroutineScope,
 ) {
     private val store = Store(
         initialState = ProductListUiState(),
-        processor = ProductListProcessor(getProducts),
+        processor = ProductListProcessor(observeProducts, observeFavoriteIds, refreshProducts, toggleFavorite),
         reducer = ProductListReducer,
         scope = scope,
     )

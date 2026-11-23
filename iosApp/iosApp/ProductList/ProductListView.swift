@@ -7,7 +7,8 @@ struct ProductListView: View {
     var body: some View {
         NavigationStack {
             content
-                .navigationTitle("商品一覧")
+                .navigationTitle("商品一覧（お気に入り \(observable.state.favoriteCount) 件）")
+                .navigationBarTitleDisplayMode(.inline)
                 .navigationDestination(item: $observable.navigateToDetailId) { id in
                     // TODO: 詳細画面ができたら置き換える
                     Text("商品ID: \(id)")
@@ -15,7 +16,6 @@ struct ProductListView: View {
                 }
         }
         .task {
-            observable.load()
             await observable.observe()
         }
     }
@@ -24,47 +24,81 @@ struct ProductListView: View {
     private var content: some View {
         let state = observable.state
 
-        if state.isLoading {
+        // 保存済みの商品が無いときだけ全画面で表示する。あるときは一覧を出したまま上部に表示する
+        if state.items.isEmpty && state.isLoading {
             ProgressView()
-        } else if let message = state.errorMessage {
+        } else if state.items.isEmpty, let message = state.errorMessage {
             VStack(spacing: 12) {
                 Text(message)
                     .foregroundStyle(.red)
                 Button("再読み込み") {
-                    observable.load()
+                    observable.refresh()
                 }
                 .buttonStyle(.borderedProminent)
             }
-        } else if state.products.isEmpty {
+        } else if state.items.isEmpty {
             Text("商品がありません")
         } else {
-            List(state.products, id: \.id) { product in
-                Button {
-                    observable.clickProduct(id: product.id)
-                } label: {
-                    ProductRow(product: product)
+            List {
+                if let message = state.errorMessage {
+                    HStack {
+                        Text("\(message)（保存済みの一覧を表示しています）")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                        Spacer()
+                        Button("再読み込み") {
+                            observable.refresh()
+                        }
+                        .font(.footnote)
+                    }
                 }
-                .foregroundStyle(.primary)
+                ForEach(state.items, id: \.product.id) { item in
+                    ProductRow(
+                        item: item,
+                        onClick: { observable.clickProduct(id: item.product.id) },
+                        onToggleFavorite: { observable.toggleFavorite(id: item.product.id) }
+                    )
+                }
             }
             .listStyle(.plain)
+            .overlay(alignment: .top) {
+                if state.isLoading {
+                    ProgressView()
+                }
+            }
         }
     }
 }
 
 private struct ProductRow: View {
-    let product: Product
+    let item: ProductListItem
+    let onClick: () -> Void
+    let onToggleFavorite: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(product.categoryName)
-                .font(.caption)
-                .foregroundStyle(.tint)
-            Text(product.name)
-                .font(.headline)
-            Text("¥\(product.price)")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack {
+            Button(action: onClick) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.product.categoryName)
+                        .font(.caption)
+                        .foregroundStyle(.tint)
+                    Text(item.product.name)
+                        .font(.headline)
+                    Text("¥\(item.product.price)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .foregroundStyle(.primary)
+
+            Button(action: onToggleFavorite) {
+                Image(systemName: item.isFavorite ? "star.fill" : "star")
+                    .foregroundStyle(.yellow)
+            }
         }
+        // 行内に 2 つのボタンがあるので、行全体がタップ対象にならないようにする
+        .buttonStyle(.borderless)
         .padding(.vertical, 4)
     }
 }

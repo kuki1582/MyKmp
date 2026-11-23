@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,9 +14,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mykmp.domain.model.Product
 import com.example.mykmp.presentation.productlist.ProductListIntent
+import com.example.mykmp.presentation.productlist.ProductListItem
 import com.example.mykmp.presentation.productlist.ProductListSideEffect
 import com.example.mykmp.presentation.productlist.ProductListUiState
 
@@ -38,10 +42,6 @@ fun ProductListRoute(
     viewModel: ProductListViewModel = viewModel { ProductListViewModel() },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        viewModel.dispatch(ProductListIntent.Load)
-    }
 
     LaunchedEffect(viewModel) {
         viewModel.sideEffect.collect { effect ->
@@ -62,7 +62,7 @@ fun ProductListScreen(
     onIntent: (ProductListIntent) -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("商品一覧") }) },
+        topBar = { TopAppBar(title = { Text("商品一覧（お気に入り ${state.favoriteCount} 件）") }) },
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -72,22 +72,30 @@ fun ProductListScreen(
         ) {
             val errorMessage = state.errorMessage
             when {
-                state.isLoading -> CircularProgressIndicator()
+                // 保存済みの商品が無いときだけ全画面で表示する。あるときは一覧を出したまま上部に表示する
+                state.items.isEmpty() && state.isLoading -> CircularProgressIndicator()
 
-                errorMessage != null -> ErrorContent(
+                state.items.isEmpty() && errorMessage != null -> ErrorContent(
                     message = errorMessage,
-                    onRetry = { onIntent(ProductListIntent.Load) },
+                    onRetry = { onIntent(ProductListIntent.Refresh) },
                 )
 
-                state.products.isEmpty() -> Text("商品がありません")
+                state.items.isEmpty() -> Text("商品がありません")
 
-                else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.products, key = { it.id }) { product ->
-                        ProductRow(
-                            product = product,
-                            onClick = { onIntent(ProductListIntent.ClickProduct(product.id)) },
-                        )
-                        HorizontalDivider()
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    if (errorMessage != null) {
+                        ErrorBanner(message = errorMessage, onRetry = { onIntent(ProductListIntent.Refresh) })
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(state.items, key = { it.product.id }) { item ->
+                            ProductRow(
+                                item = item,
+                                onClick = { onIntent(ProductListIntent.ClickProduct(item.product.id)) },
+                                onToggleFavorite = { onIntent(ProductListIntent.ToggleFavorite(item.product.id)) },
+                            )
+                            HorizontalDivider()
+                        }
                     }
                 }
             }
@@ -96,24 +104,35 @@ fun ProductListScreen(
 }
 
 @Composable
-private fun ProductRow(product: Product, onClick: () -> Unit) {
-    Column(
+private fun ProductRow(
+    item: ProductListItem,
+    onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
+) {
+    val product = item.product
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = product.categoryName,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(text = product.name, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = "¥${product.price}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = product.categoryName,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(text = product.name, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "¥${product.price}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TextButton(onClick = onToggleFavorite) {
+            Text(text = if (item.isFavorite) "★" else "☆", style = MaterialTheme.typography.titleLarge)
+        }
     }
 }
 
@@ -128,16 +147,35 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
     }
 }
 
+@Composable
+private fun ErrorBanner(message: String, onRetry: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "$message（保存済みの一覧を表示しています）",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onRetry) { Text("再読み込み") }
+    }
+}
+
 @Preview
 @Composable
 private fun ProductListScreenPreview() {
     MaterialTheme {
         ProductListScreen(
             state = ProductListUiState(
-                products = listOf(
-                    Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療"),
-                    Product(id = "2", name = "医療機器B", price = 3400, categoryName = "医療"),
+                items = listOf(
+                    ProductListItem(Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療"), isFavorite = true),
+                    ProductListItem(Product(id = "2", name = "医療機器B", price = 3400, categoryName = "医療"), isFavorite = false),
                 ),
+                favoriteCount = 1,
             ),
             onIntent = {},
         )
