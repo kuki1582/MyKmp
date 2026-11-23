@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="950" height="370" viewBox="0 0 950 370" font-family="Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif">
+  <!-- ProductList.puml と同じ内容の図（PlantUML ビューアが無くても見られるように用意） -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="950" height="370" fill="#ffffff"/>
+
+  <text x="475" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#222">ProductList の流れ</text>
+
+  <!-- boxes -->
+  <rect x="30" y="140" width="170" height="70" rx="10" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.5"/>
+  <text x="115" y="170" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">UI</text>
+  <text x="115" y="192" text-anchor="middle" font-size="11" fill="#444">Android: Compose / iOS: SwiftUI</text>
+
+  <rect x="340" y="140" width="200" height="70" rx="10" fill="#FFF8E1" stroke="#F9A825" stroke-width="1.5"/>
+  <text x="440" y="180" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">ProductListProcessor</text>
+
+  <rect x="720" y="140" width="190" height="70" rx="10" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.5"/>
+  <text x="815" y="180" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">ProductListReducer</text>
+
+  <!-- Intent: UI -> Processor -->
+  <line x1="200" y1="175" x2="338" y2="175" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="270" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#2E7D32">Intent</text>
+  <text x="270" y="195" text-anchor="middle" font-size="11" fill="#444">・Load</text>
+  <text x="270" y="210" text-anchor="middle" font-size="11" fill="#444">・ClickProduct(id)</text>
+
+  <!-- Action: Processor -> Reducer -->
+  <line x1="540" y1="175" x2="718" y2="175" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="630" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#1565C0">Action</text>
+  <text x="630" y="195" text-anchor="middle" font-size="11" fill="#444">・LoadStarted</text>
+  <text x="630" y="210" text-anchor="middle" font-size="11" fill="#444">・LoadSucceeded(products)</text>
+  <text x="630" y="225" text-anchor="middle" font-size="11" fill="#444">・LoadFailed(message)</text>
+
+  <!-- State: Reducer -> UI (top) -->
+  <path d="M815,140 L815,75 L115,75 L115,138" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="465" y="67" text-anchor="middle" font-size="13" font-weight="bold" fill="#6A1B9A">State</text>
+  <text x="465" y="95" text-anchor="middle" font-size="11" fill="#444">ProductListUiState</text>
+
+  <!-- SideEffect: Processor -> UI (bottom) -->
+  <path d="M440,210 L440,300 L115,300 L115,212" fill="none" stroke="#C62828" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrow)"/>
+  <text x="278" y="292" text-anchor="middle" font-size="13" font-weight="bold" fill="#C62828">SideEffect（1 回きり）</text>
+  <text x="278" y="320" text-anchor="middle" font-size="11" fill="#444">・NavigateToDetail(id)</text>
+</svg>
