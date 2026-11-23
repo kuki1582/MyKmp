@@ -21,5 +21,10 @@ class ProductListViewModel : ViewModel() {
     val state: StateFlow<ProductListUiState> = store.state
     val sideEffect: Flow<ProductListSideEffect> = store.sideEffect
 
+    init {
+        // 監視を始める Load は 1 回だけ送る。画面回転で Composable が作り直されても ViewModel は残るので、ここで送る
+        store.dispatch(ProductListIntent.Load)
+    }
+
     fun dispatch(intent: ProductListIntent) = store.dispatch(intent)
 }

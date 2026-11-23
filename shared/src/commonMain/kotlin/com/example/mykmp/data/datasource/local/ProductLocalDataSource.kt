@@ -1,8 +1,11 @@
 package com.example.mykmp.data.datasource.local
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import com.example.mykmp.data.datasource.local.db.AppDatabase
 import com.example.mykmp.data.datasource.local.db.ProductEntity
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 /**
@@ -10,7 +13,8 @@ import kotlinx.coroutines.withContext
  * テストでは偽物（Fake）に差し替えられる。
  */
 internal interface ProductLocalDataSource {
-    suspend fun getProducts(): List<ProductEntity>
+    /** 保存済みの商品。DB が書き換わるたびに新しい一覧が流れてくる */
+    fun observeProducts(): Flow<List<ProductEntity>>
 
     /** 保存済みの商品をすべて消して、渡した商品に入れ替える */
     suspend fun replaceProducts(products: List<ProductEntity>)
@@ -24,9 +28,8 @@ internal class SqlDelightProductLocalDataSource(
 
     private val queries = database.productQueries
 
-    override suspend fun getProducts(): List<ProductEntity> = withContext(ioDispatcher) {
-        queries.selectAll().executeAsList()
-    }
+    override fun observeProducts(): Flow<List<ProductEntity>> =
+        queries.selectAll().asFlow().mapToList(ioDispatcher)
 
     override suspend fun replaceProducts(products: List<ProductEntity>) = withContext(ioDispatcher) {
         // 途中で失敗したときに中途半端な状態にならないよう、1 つのトランザクションで入れ替える

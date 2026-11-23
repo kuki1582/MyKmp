@@ -1,9 +1,9 @@
 package com.example.mykmp.presentation.productlist
 
-import com.example.mykmp.domain.model.Product
-
 data class ProductListUiState(
+    /** API から取り直している最中か */
     val isLoading: Boolean = false,
-    val products: List<Product> = emptyList(),
+    val items: List<ProductListItem> = emptyList(),
+    val favoriteCount: Int = 0,
     val errorMessage: String? = null,
 )

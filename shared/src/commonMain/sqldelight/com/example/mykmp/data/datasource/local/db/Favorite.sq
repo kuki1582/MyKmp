@@ -1,0 +1,19 @@
+-- お気に入りに登録した商品の ID
+CREATE TABLE FavoriteEntity (
+    productId TEXT NOT NULL PRIMARY KEY
+);
+
+selectAllIds:
+SELECT productId
+FROM FavoriteEntity;
+
+exists:
+SELECT EXISTS(SELECT 1 FROM FavoriteEntity WHERE productId = ?);
+
+insert:
+INSERT OR IGNORE INTO FavoriteEntity(productId)
+VALUES (?);
+
+delete:
+DELETE FROM FavoriteEntity
+WHERE productId = ?;

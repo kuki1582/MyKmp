@@ -5,13 +5,16 @@ import com.example.mykmp.presentation.mvi.Reducer
 internal object ProductListReducer : Reducer<ProductListUiState, ProductListAction> {
     override fun reduce(state: ProductListUiState, action: ProductListAction): ProductListUiState =
         when (action) {
-            ProductListAction.LoadStarted ->
+            ProductListAction.RefreshStarted ->
                 state.copy(isLoading = true, errorMessage = null)
 
-            is ProductListAction.LoadSucceeded ->
-                state.copy(isLoading = false, products = action.products)
+            ProductListAction.RefreshSucceeded ->
+                state.copy(isLoading = false)
 
-            is ProductListAction.LoadFailed ->
+            is ProductListAction.RefreshFailed ->
                 state.copy(isLoading = false, errorMessage = action.message)
+
+            is ProductListAction.ItemsUpdated ->
+                state.copy(items = action.items, favoriteCount = action.favoriteCount)
         }
 }
