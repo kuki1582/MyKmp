@@ -1,5 +1,6 @@
 package com.example.mykmp.data.datasource.remote
 
+import com.example.mykmp.data.model.CategoryDto
 import com.example.mykmp.data.model.ProductsResponseDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -14,11 +15,16 @@ import io.ktor.client.request.parameter
 internal class ProductRemoteDataSource(
     private val httpClient: HttpClient,
 ) {
+    /** 商品一覧。使うのは title / price / category だけ */
     suspend fun getProducts(): ProductsResponseDto =
         httpClient.get("$BASE_URL/products") {
             parameter("limit", 30)
-            parameter("select", "title,price")
+            parameter("select", "title,price,category")
         }.body()
+
+    /** カテゴリ一覧。使うのは slug / name だけ */
+    suspend fun getCategories(): List<CategoryDto> =
+        httpClient.get("$BASE_URL/products/categories").body()
 
     companion object {
         const val BASE_URL = "https://dummyjson.com"

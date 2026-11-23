@@ -14,4 +14,6 @@ internal data class ProductDto(
     val id: Int,
     val title: String,
     val price: Double,
+    /** カテゴリの slug（例: "beauty"）。表示名は categories API から取る */
+    val category: String,
 )

@@ -56,6 +56,9 @@ private struct ProductRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            Text(product.categoryName)
+                .font(.caption)
+                .foregroundStyle(.tint)
             Text(product.name)
                 .font(.headline)
             Text("¥\(product.price)")

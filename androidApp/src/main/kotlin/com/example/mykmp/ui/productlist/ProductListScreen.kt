@@ -103,6 +103,11 @@ private fun ProductRow(product: Product, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
+        Text(
+            text = product.categoryName,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
         Text(text = product.name, style = MaterialTheme.typography.titleMedium)
         Text(
             text = "¥${product.price}",
@@ -130,8 +135,8 @@ private fun ProductListScreenPreview() {
         ProductListScreen(
             state = ProductListUiState(
                 products = listOf(
-                    Product(id = "1", name = "医療機器A", price = 120),
-                    Product(id = "2", name = "医療機器B", price = 3400),
+                    Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療"),
+                    Product(id = "2", name = "医療機器B", price = 3400, categoryName = "医療"),
                 ),
             ),
             onIntent = {},
