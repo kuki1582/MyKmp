@@ -1,0 +1,19 @@
+-- 商品のキャッシュ。API で取得した結果を保存し、通信できないときに表示する
+CREATE TABLE ProductEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    categoryName TEXT NOT NULL
+);
+
+selectAll:
+SELECT *
+FROM ProductEntity
+ORDER BY CAST(id AS INTEGER);
+
+insert:
+INSERT OR REPLACE INTO ProductEntity(id, name, price, categoryName)
+VALUES ?;
+
+deleteAll:
+DELETE FROM ProductEntity;

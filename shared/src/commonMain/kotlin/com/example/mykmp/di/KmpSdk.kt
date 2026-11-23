@@ -1,5 +1,8 @@
 package com.example.mykmp.di
 
+import com.example.mykmp.data.datasource.local.ProductLocalDataSource
+import com.example.mykmp.data.datasource.local.SqlDelightProductLocalDataSource
+import com.example.mykmp.data.datasource.local.db.AppDatabase
 import com.example.mykmp.data.datasource.remote.ProductRemoteDataSource
 import com.example.mykmp.data.datasource.remote.createHttpClient
 import com.example.mykmp.data.repository.ProductRepositoryImpl
@@ -13,13 +16,17 @@ import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
-// OS固有のモジュール（HttpClientEngine を提供する）
-internal expect val platformModule: Module
+internal const val DATABASE_NAME = "mykmp.db"
+
+// OS固有のモジュール（HttpClientEngine / SqlDriver / IO 用 Dispatcher を提供する）
+internal expect fun platformModule(context: PlatformContext): Module
 
 internal val sharedModule = module{
     single { createHttpClient(get()) }
     single { ProductRemoteDataSource(get()) }
-    single<ProductRepository>{ ProductRepositoryImpl(get()) }
+    single { AppDatabase(get()) }
+    single<ProductLocalDataSource> { SqlDelightProductLocalDataSource(get(), get()) }
+    single<ProductRepository>{ ProductRepositoryImpl(get(), get()) }
     factory { GetProductsUseCase(get()) }
 }
 
@@ -27,11 +34,15 @@ internal val sharedModule = module{
 object KmpSdk{
     private var koinApp: KoinApplication? = null
 
-    // アプリ起動時に一度だけ呼ぶ初期化メソッド
-    fun initialize(){
+    /**
+     * アプリ起動時に一度だけ呼ぶ初期化メソッド
+     * - Android: `KmpSdk.initialize(PlatformContext(this))`（Application から）
+     * - iOS: `KmpSdk.shared.initialize(context: PlatformContext())`
+     */
+    fun initialize(context: PlatformContext){
         if(koinApp == null){
             koinApp = koinApplication{
-                modules(platformModule,sharedModule)
+                modules(platformModule(context),sharedModule)
             }
         }
     }
