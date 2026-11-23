@@ -1,73 +1,74 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# MyKMP
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Kotlin Multiplatform（KMP）で Android と iOS のロジックを共有する商品アプリです。
+UI は各 OS のネイティブ（Android: Jetpack Compose / iOS: SwiftUI）で書き、それより下は `shared` モジュールで共有しています。
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## 技術スタック
 
-### Running the apps
+| 用途 | ライブラリ | バージョン |
+| --- | --- | --- |
+| 言語 | Kotlin | 2.4.21 |
+| 非同期 | kotlinx.coroutines（Flow） | 1.11.0 |
+| 通信 | Ktor Client（Android: OkHttp / iOS: Darwin）＋ kotlinx.serialization | 3.6.1 |
+| DB | SQLDelight | 2.4.1 |
+| DI | Koin | 4.2.2 |
+| Swift 連携 | SKIE（Flow → AsyncSequence、sealed → enum） | 0.10.16 |
+| Android UI | Jetpack Compose / Material3 | Compose Multiplatform 1.12.2 |
+| Android 画面遷移 | Navigation Compose | 2.10.0 |
+| Android 画像 | Coil 3 | 3.6.3 |
+| iOS UI | SwiftUI | - |
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+## アーキテクチャ
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+### 3 つの層
 
-### Running tests
+```
+┌──────────────────────────┐   ┌──────────────────────────┐
+│ androidApp（Compose）    │   │ iosApp（SwiftUI）        │
+│  Screen ─▶ ViewModel     │   │  View ─▶ Observable      │
+└────────────┬─────────────┘   └────────────┬─────────────┘
+             └──────────────┬───────────────┘
+                            ▼ Store を持つ
+┌─────────────────────────────────────────────────────────┐
+│ shared                                                  │
+│                                                         │
+│  presentation   Store / Processor / Reducer（MVI）      │
+│        │                                                │
+│        ▼ UseCase を呼ぶ                                  │
+│  domain         UseCase / Repository（インターフェース）  │
+│        ▲          / model                               │
+│        │ インターフェースを実装                            │
+│  data           RepositoryImpl / DataSource / mapper    │
+│                   │                    │                │
+└───────────────────┼────────────────────┼────────────────┘
+                    ▼                    ▼
+            DummyJSON API（Ktor）   SQLite（SQLDelight）
+```
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+| 層 | 役割 | 主な中身 |
+| --- | --- | --- |
+| presentation | 画面の状態を管理する（MVI） | `mvi/`（共通の土台：Store / Processor / Reducer）、画面ごとのフォルダ（`productlist/`、`productdetail/`） |
+| domain | アプリのルール。他の層やライブラリに依存しない | `model/`、`repository/`（インターフェース）、`usecase/`、`DomainResult` |
+| data | データの取得と保存 | `datasource/remote`（Ktor）、`datasource/local`（SQLDelight）、`model/`（DTO）、`mapper/`、`repository/`（実装） |
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+依存の向きは **`UI → presentation → domain ← data`** です。domain は data を知らず、data が domain のインターフェースを実装します。
 
----
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
-### Presentation architecture (MVI)
+### presentation 層の流れ
 
 ```
 UI ──Intent──▶ Processor ──Action──▶ Reducer ──State──▶ UI
+                  │
                   └──SideEffect──▶ UI（画面遷移・トーストなど 1 回きりのイベント）
 ```
-
-`shared/src/commonMain/.../presentation` 配下:
-
-| フォルダ | 中身 |
-| --- | --- |
-| `mvi` | 全画面共通の土台。汎用 `Store<Intent, Action, State, SideEffect>`、`Processor`、`Reducer`、`storeScope()` |
-| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store |
-| `productdetail` | 商品詳細画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store |
 
 | 役割 | 何をするか |
 | --- | --- |
 | Intent | ユーザーがしたいこと（UI から届く） |
-| Processor | Intent を受けて UseCase を呼び、Action / SideEffect を出す |
-| Action | 実際に起きたこと（Store 内部専用・internal） |
-| Reducer | State + Action → 次の State（副作用なしの純粋関数） |
-| State | 画面の状態 |
+| Processor | Intent を受けて UseCase を呼び、結果を Action / SideEffect として出す |
+| Action | 実際に起きたこと（Store の内部だけで使う） |
+| Reducer | 今の State と Action から次の State を作る、副作用のない関数 |
+| State | 画面の状態（`StateFlow`） |
 | SideEffect | 1 回だけ届けるイベント |
 
-新しい画面は `presentation/<画面名>/` フォルダを作り、Intent / Action / State / SideEffect を定義して、Processor と Reducer を書き、画面ごとの Store から `mvi` の汎用 `Store` に渡すだけでよい。
-
-- Android: `androidApp` の `ViewModel` が `viewModelScope` で Store を持つ（画面回転で作り直さないため）
-- iOS: [SKIE](https://skie.touchlab.co) により `StateFlow` / `Flow` を `for await` で、sealed を `onEnum(of:)` で扱う。Store は `KmpSdk.shared.createProductListStore()` で作り、破棄時に `close()` する
-
-### Data layer
-
-`shared/src/commonMain/.../data` 配下:
-
-| フォルダ | 中身 |
-| --- | --- |
-| `datasource/remote` | API 呼び出し（Ktor Client + kotlinx.serialization）。`ProductRemoteDataSource` が [DummyJSON](https://dummyjson.com/docs/products) の `GET /products`、`GET /products/{id}`、`GET /products/categories` を呼ぶ |
-| `datasource/local` | データベース操作（SQLDelight）。商品のキャッシュ（`ProductLocalDataSource`）とお気に入り（`FavoriteLocalDataSource`）。スキーマは `shared/src/commonMain/sqldelight/` |
-| `model` | data 層のモデル。API のレスポンス（`ProductDto`、`CategoryDto`）。DB の `ProductEntity` は SQLDelight が `.sq` から生成する |
-| `mapper` | data 層のモデル → ドメインモデル（`Product`）への変換 |
-| `repository` | DataSource を呼び、mapper でドメインモデルに変換する。画面には常に DB の内容を Flow で流し、API の結果は DB に保存する（API が失敗しても前回の一覧が表示される） |
-
-HttpClient の共通設定は `datasource/remote/HttpClientFactory.kt`。エンジンだけ OS ごとに差し替える（Android: OkHttp / iOS: Darwin）。
+- 汎用の `Store<Intent, Action, State, SideEffect>` が全体をつなぎ、画面ごとには Processor と Reducer を書くだけにしている
+- Store は Android の仕組みに依存しない。Android は `ViewModel` が `viewModelScope` で、iOS は `ObservableObject` が `storeScope()` で Store を持つ
