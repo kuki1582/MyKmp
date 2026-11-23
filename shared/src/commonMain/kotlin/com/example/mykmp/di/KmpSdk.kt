@@ -1,5 +1,7 @@
 package com.example.mykmp.di
 
+import com.example.mykmp.data.datasource.remote.ProductRemoteDataSource
+import com.example.mykmp.data.datasource.remote.createHttpClient
 import com.example.mykmp.data.repository.ProductRepositoryImpl
 import com.example.mykmp.domain.repository.ProductRepository
 import com.example.mykmp.domain.usecase.GetProductsUseCase
@@ -11,10 +13,12 @@ import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
-// OS固有のモジュール
+// OS固有のモジュール（HttpClientEngine を提供する）
 internal expect val platformModule: Module
 
 internal val sharedModule = module{
+    single { createHttpClient(get()) }
+    single { ProductRemoteDataSource(get()) }
     single<ProductRepository>{ ProductRepositoryImpl(get()) }
     factory { GetProductsUseCase(get()) }
 }
