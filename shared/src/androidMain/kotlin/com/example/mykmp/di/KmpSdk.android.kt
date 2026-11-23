@@ -11,6 +11,6 @@ import org.koin.dsl.module
 
 internal actual fun platformModule(context: PlatformContext) = module {
     single<HttpClientEngine> { OkHttp.create() }
-    single<SqlDriver> { AndroidSqliteDriver(AppDatabase.Schema, context, DATABASE_NAME) }
+    single<SqlDriver> { AndroidSqliteDriver(AppDatabase.Schema, context.applicationContext, DATABASE_NAME) }
     single<CoroutineDispatcher> { Dispatchers.IO }
 }
