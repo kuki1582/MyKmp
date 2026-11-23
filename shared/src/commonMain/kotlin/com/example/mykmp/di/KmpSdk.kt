@@ -4,8 +4,8 @@ import com.example.mykmp.data.repository.ProductRepositoryImpl
 import com.example.mykmp.domain.repository.ProductRepository
 import com.example.mykmp.domain.usecase.GetProductsUseCase
 import com.example.mykmp.presentation.store.ProductListStore
+import com.example.mykmp.presentation.store.storeScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
@@ -44,5 +44,5 @@ object KmpSdk{
         ProductListStore(getProductsUseCase(), scope)
 
     /** 商品一覧の Store を作る（iOS 用）。不要になったら [ProductListStore.close] を呼ぶこと */
-    fun createProductListStore(): ProductListStore = createProductListStore(MainScope())
+    fun createProductListStore(): ProductListStore = createProductListStore(storeScope())
 }

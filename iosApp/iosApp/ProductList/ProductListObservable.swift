@@ -20,7 +20,7 @@ final class ProductListObservable: ObservableObject {
     }
 
     deinit {
-        // iOS では Store の scope（MainScope）をこちらで管理しているので、破棄時に止める
+        // iOS では Store の scope（Main.immediate + SupervisorJob）をこちらで管理しているので、破棄時に止める
         store.close()
     }
 

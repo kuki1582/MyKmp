@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
  * 型を具体的に書いて公開しているのは、Swift 側で SKIE が
  * StateFlow<ProductListUiState> をそのまま AsyncSequence として扱えるようにするため。
  *
- * @param scope Android では viewModelScope、iOS では MainScope() を渡す。
+ * @param scope Android では viewModelScope、iOS では storeScope() を渡す。
  */
 class ProductListStore internal constructor(
     getProducts: GetProductsUseCase,
