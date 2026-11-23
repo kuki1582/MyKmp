@@ -5,6 +5,7 @@ import com.example.mykmp.data.datasource.remote.ProductRemoteDataSource
 import com.example.mykmp.data.mapper.toDomain
 import com.example.mykmp.data.mapper.toEntity
 import com.example.mykmp.domain.model.Product
+import com.example.mykmp.domain.model.ProductDetail
 import com.example.mykmp.domain.repository.ProductRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.map
  * 画面に出すデータは常に DB から流す（DB を唯一の情報源にする）。
  * - [observeProducts]：DB の商品を Flow で流す。DB が書き換わると自動で新しい一覧が流れる
  * - [refreshProducts]：API から取得して DB に保存する。失敗しても DB の前回の結果は表示されたまま
+ * - [getProductDetail]：詳細は DB に保存せず、API から直接取る
  */
 internal class ProductRepositoryImpl(
     private val remoteDataSource: ProductRemoteDataSource,
@@ -29,6 +31,15 @@ internal class ProductRepositoryImpl(
     override suspend fun refreshProducts() {
         val products = fetchFromRemote()
         localDataSource.replaceProducts(products.map { it.toEntity() })
+    }
+
+    /** 詳細は DB に保存せず、毎回 API から取る。カテゴリの表示名は一覧と同じく categories API から取る */
+    override suspend fun getProductDetail(id: String): ProductDetail = coroutineScope {
+        val detailDeferred = async { remoteDataSource.getProduct(id) }
+        val categoriesDeferred = async { remoteDataSource.getCategories() }
+
+        val categoryNames = categoriesDeferred.await().associate { it.slug to it.name }
+        detailDeferred.await().toDomain(categoryNames)
     }
 
     /**

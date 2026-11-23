@@ -11,11 +11,13 @@ import com.example.mykmp.data.repository.FavoriteRepositoryImpl
 import com.example.mykmp.data.repository.ProductRepositoryImpl
 import com.example.mykmp.domain.repository.ProductRepository
 import com.example.mykmp.domain.repository.FavoriteRepository
+import com.example.mykmp.domain.usecase.GetProductDetailUseCase
 import com.example.mykmp.domain.usecase.ObserveFavoriteIdsUseCase
 import com.example.mykmp.domain.usecase.ObserveProductsUseCase
 import com.example.mykmp.domain.usecase.RefreshProductsUseCase
 import com.example.mykmp.domain.usecase.ToggleFavoriteUseCase
 import com.example.mykmp.presentation.mvi.storeScope
+import com.example.mykmp.presentation.productdetail.ProductDetailStore
 import com.example.mykmp.presentation.productlist.ProductListStore
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.KoinApplication
@@ -40,6 +42,7 @@ internal val sharedModule = module{
     factory { RefreshProductsUseCase(get()) }
     factory { ObserveFavoriteIdsUseCase(get()) }
     factory { ToggleFavoriteUseCase(get()) }
+    factory { GetProductDetailUseCase(get()) }
 }
 
 // android、iosから利用するSDKのエンドポイント
@@ -75,4 +78,18 @@ object KmpSdk{
 
     /** 商品一覧の Store を作る（iOS 用）。不要になったら [ProductListStore.close] を呼ぶこと */
     fun createProductListStore(): ProductListStore = createProductListStore(storeScope())
+
+    /** 商品詳細の Store を作る。Android は ViewModel の viewModelScope を渡す */
+    fun createProductDetailStore(productId: String, scope: CoroutineScope): ProductDetailStore =
+        ProductDetailStore(
+            productId = productId,
+            getProductDetail = koin.get(),
+            observeFavoriteIds = koin.get(),
+            toggleFavorite = koin.get(),
+            scope = scope,
+        )
+
+    /** 商品詳細の Store を作る（iOS 用）。不要になったら [ProductDetailStore.close] を呼ぶこと */
+    fun createProductDetailStore(productId: String): ProductDetailStore =
+        createProductDetailStore(productId, storeScope())
 }
