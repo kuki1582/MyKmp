@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     // Swift から StateFlow / Flow を AsyncSequence、sealed を enum として扱えるようにする
     alias(libs.plugins.skie)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -45,9 +46,11 @@ kotlin {
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
+            implementation(libs.sqldelight.androidDriver)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.nativeDriver)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -62,6 +65,7 @@ kotlin {
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.serialization.kotlinxJson)
             implementation(libs.ktor.client.logging)
+            implementation(libs.sqldelight.coroutines)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
@@ -73,6 +77,10 @@ kotlin {
             implementation(libs.ktor.client.mock)
             implementation(libs.koin.test)
         }
+        getByName("androidHostTest").dependencies {
+            // JVM 上で SQLDelight をインメモリ DB で動かしてテストする
+            implementation(libs.sqldelight.sqliteDriver)
+        }
         getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testRunner)
         }
@@ -81,4 +89,12 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+sqldelight {
+    databases {
+        create("AppDatabase") {
+            packageName.set("com.example.mykmp.data.datasource.local.db")
+        }
+    }
 }
