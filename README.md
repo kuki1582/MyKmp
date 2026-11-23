@@ -41,7 +41,7 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | フォルダ | 中身 |
 | --- | --- |
 | `mvi` | 全画面共通の土台。汎用 `Store<Intent, Action, State, SideEffect>`、`Processor`、`Reducer`、`storeScope()` |
-| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store と、流れの図 [`ProductList.md`](./shared/src/commonMain/kotlin/com/example/mykmp/presentation/productlist/ProductList.md)（Mermaid） |
+| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store |
 
 | 役割 | 何をするか |
 | --- | --- |
