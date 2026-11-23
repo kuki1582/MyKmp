@@ -1,4 +1,4 @@
-package com.example.mykmp.data.datasource.remote
+package com.example.mykmp.data.model
 
 import kotlinx.serialization.Serializable
 

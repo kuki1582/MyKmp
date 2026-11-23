@@ -65,6 +65,8 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | --- | --- |
 | `datasource/remote` | API 呼び出し（Ktor Client + kotlinx.serialization）。`ProductRemoteDataSource` が [DummyJSON](https://dummyjson.com/docs/products) の `GET /products` を呼ぶ |
 | `datasource/local` | データベース操作（今後追加予定） |
-| `repository` | DataSource を呼び、DTO をドメインモデルに変換する |
+| `model` | data 層のモデル。API のレスポンス（`ProductDto`）。DB 対応時は `ProductEntity` もここ |
+| `mapper` | data 層のモデル → ドメインモデル（`Product`）への変換 |
+| `repository` | DataSource を呼び、mapper でドメインモデルに変換して返す |
 
 HttpClient の共通設定は `datasource/remote/HttpClientFactory.kt`。エンジンだけ OS ごとに差し替える（Android: OkHttp / iOS: Darwin）。
