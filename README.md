@@ -29,3 +29,30 @@ Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+### Presentation architecture (MVI)
+
+```
+UI ──Intent──▶ Processor ──Action──▶ Reducer ──State──▶ UI
+                  └──SideEffect──▶ UI（画面遷移・トーストなど 1 回きりのイベント）
+```
+
+`shared/src/commonMain/.../presentation` 配下:
+
+| フォルダ | 中身 |
+| --- | --- |
+| `mvi` | 全画面共通の土台。汎用 `Store<Intent, Action, State, SideEffect>`、`Processor`、`Reducer`、`storeScope()` |
+| `productlist` | 商品一覧画面の Intent / Action / UiState / SideEffect / Processor / Reducer / Store と、流れの図 [`ProductList.puml`](./shared/src/commonMain/kotlin/com/example/mykmp/presentation/productlist/ProductList.puml) |
+
+| 役割 | 何をするか |
+| --- | --- |
+| Intent | ユーザーがしたいこと（UI から届く） |
+| Processor | Intent を受けて UseCase を呼び、Action / SideEffect を出す |
+| Action | 実際に起きたこと（Store 内部専用・internal） |
+| Reducer | State + Action → 次の State（副作用なしの純粋関数） |
+| State | 画面の状態 |
+| SideEffect | 1 回だけ届けるイベント |
+
+新しい画面は `presentation/<画面名>/` フォルダを作り、Intent / Action / State / SideEffect を定義して、Processor と Reducer を書き、画面ごとの Store から `mvi` の汎用 `Store` に渡すだけでよい。
+
+- Android: `androidApp` の `ViewModel` が `viewModelScope` で Store を持つ（画面回転で作り直さないため）
+- iOS: [SKIE](https://skie.touchlab.co) により `StateFlow` / `Flow` を `for await` で、sealed を `onEnum(of:)` で扱う。Store は `KmpSdk.shared.createProductListStore()` で作り、破棄時に `close()` する

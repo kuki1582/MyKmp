@@ -1,0 +1,25 @@
+@startuml ProductList
+' Graphviz をインストールしていなくても表示できるよう、PlantUML 内蔵のレイアウトを使う
+!pragma layout smetana
+' 商品一覧（ProductList）の MVI の流れ
+'
+' Intent ──▶ Processor ──Action──▶ Reducer ──State──▶ UI
+'                │
+'                └──SideEffect──▶ UI
+
+title ProductList の流れ
+
+left to right direction
+skinparam shadowing false
+skinparam rectangleRoundCorner 10
+
+rectangle "UI\n(Android: Compose / iOS: SwiftUI)" as UI
+rectangle "ProductListProcessor" as Processor
+rectangle "ProductListReducer" as Reducer
+
+UI --> Processor : Intent\n・Load\n・ClickProduct(id)
+Processor --> Reducer : Action\n・LoadStarted\n・LoadSucceeded(products)\n・LoadFailed(message)
+Reducer --> UI : State\n(ProductListUiState)
+Processor --> UI : SideEffect\n・NavigateToDetail(id)
+
+@enduml
