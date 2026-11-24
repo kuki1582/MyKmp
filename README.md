@@ -3,6 +3,12 @@
 Kotlin Multiplatform（KMP）で Android と iOS のロジックを共有する商品アプリです。
 UI は各 OS のネイティブ（Android: Jetpack Compose / iOS: SwiftUI）で書き、それより下は `shared` モジュールで共有しています。
 
+## デモ（Android）
+
+一覧から商品を開き、詳細画面でお気に入りに登録して一覧に戻ると、★ とお気に入り件数が一覧にも反映されます。
+
+<img src="docs/demo-android.gif" alt="Android のデモ：一覧 → 詳細でお気に入り登録 → 一覧に戻ると反映される" width="320">
+
 ## 技術スタック
 
 | 用途 | ライブラリ | バージョン |
