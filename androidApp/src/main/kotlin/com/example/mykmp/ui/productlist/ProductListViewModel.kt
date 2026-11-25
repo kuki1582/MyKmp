@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * shared の [ProductListStore] を画面回転などで作り直さないために持っておくだけの ViewModel。
  * ロジックは Store（Processor / Reducer）側にあるので、ここには書かない。
+ * 最初の読み込みは Store を作った時点で自動で始まる（Processor.bootstrap）。
  * viewModelScope は ViewModel 破棄時に自動で止まるので、store.close() は呼ばなくてよい。
  */
 class ProductListViewModel : ViewModel() {
@@ -20,11 +21,6 @@ class ProductListViewModel : ViewModel() {
 
     val state: StateFlow<ProductListUiState> = store.state
     val sideEffect: Flow<ProductListSideEffect> = store.sideEffect
-
-    init {
-        // 監視を始める Load は 1 回だけ送る。画面回転で Composable が作り直されても ViewModel は残るので、ここで送る
-        store.dispatch(ProductListIntent.Load)
-    }
 
     fun dispatch(intent: ProductListIntent) = store.dispatch(intent)
 }

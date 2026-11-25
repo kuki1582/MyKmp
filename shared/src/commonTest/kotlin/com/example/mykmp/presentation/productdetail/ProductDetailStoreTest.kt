@@ -38,12 +38,11 @@ class ProductDetailStoreTest {
     )
 
     @Test
-    fun load_showsDetailAndFavoriteState() = runTest {
+    fun bootstrap_showsDetailAndFavoriteState() = runTest {
         productRepository.detail = { detail }
         favoriteRepository.ids.value = setOf("1")
         val store = store()
 
-        store.dispatch(ProductDetailIntent.Load)
 
         assertEquals(ProductDetailUiState(detail = detail, isFavorite = true), store.state.value)
     }
@@ -52,7 +51,6 @@ class ProductDetailStoreTest {
     fun loadFailure_showsErrorAndRetryRecovers() = runTest {
         productRepository.detail = { error("network") }
         val store = store()
-        store.dispatch(ProductDetailIntent.Load)
         assertEquals("商品の詳細を取得できませんでした", store.state.value.errorMessage)
 
         productRepository.detail = { detail }
@@ -65,7 +63,6 @@ class ProductDetailStoreTest {
     fun toggleFavorite_updatesOnlyThisProduct() = runTest {
         productRepository.detail = { detail }
         val store = store()
-        store.dispatch(ProductDetailIntent.Load)
 
         store.dispatch(ProductDetailIntent.ToggleFavorite)
 
@@ -78,7 +75,6 @@ class ProductDetailStoreTest {
         productRepository.detail = { detail }
         favoriteRepository.failToggle = true
         val store = store()
-        store.dispatch(ProductDetailIntent.Load)
 
         store.dispatch(ProductDetailIntent.ToggleFavorite)
 
@@ -95,7 +91,7 @@ private class FakeProductRepository : ProductRepository {
 
     override fun observeProducts(): Flow<List<Product>> = emptyFlow()
 
-    override suspend fun refreshProducts() = Unit
+    override suspend fun refreshProducts(force: Boolean) = Unit
 
     override suspend fun getProductDetail(id: String): ProductDetail = detail()
 }

@@ -16,6 +16,8 @@ import com.example.mykmp.domain.usecase.ObserveFavoriteIdsUseCase
 import com.example.mykmp.domain.usecase.ObserveProductsUseCase
 import com.example.mykmp.domain.usecase.RefreshProductsUseCase
 import com.example.mykmp.domain.usecase.ToggleFavoriteUseCase
+import com.example.mykmp.presentation.mvi.PrintStoreLogger
+import com.example.mykmp.presentation.mvi.StoreLogger
 import com.example.mykmp.presentation.mvi.storeScope
 import com.example.mykmp.presentation.productdetail.ProductDetailStore
 import com.example.mykmp.presentation.productlist.ProductListStore
@@ -49,6 +51,9 @@ internal val sharedModule = module{
 object KmpSdk{
     private var koinApp: KoinApplication? = null
 
+    /** Store のログの出力先。null ならログを出さない */
+    private var storeLogger: StoreLogger? = null
+
     /**
      * アプリ起動時に一度だけ呼ぶ初期化メソッド
      * - Android: `KmpSdk.initialize(PlatformContext(this))`（Application から）
@@ -60,6 +65,16 @@ object KmpSdk{
                 modules(platformModule(context),sharedModule)
             }
         }
+    }
+
+    /**
+     * Store を通る Intent / Action / SideEffect をコンソールに出す。デバッグビルドでだけ呼ぶこと。
+     * これ以降に作った Store からログが出る。
+     * - Android: Application で `if (デバッグビルド) KmpSdk.enableLogging()`
+     * - iOS: `#if DEBUG KmpSdk.shared.enableLogging() #endif`
+     */
+    fun enableLogging(){
+        storeLogger = PrintStoreLogger
     }
 
     // 内部でkoinインスタンスを参照するためのプロパティ
@@ -74,6 +89,7 @@ object KmpSdk{
             refreshProducts = koin.get(),
             toggleFavorite = koin.get(),
             scope = scope,
+            logger = storeLogger,
         )
 
     /** 商品一覧の Store を作る（iOS 用）。不要になったら [ProductListStore.close] を呼ぶこと */
@@ -87,6 +103,7 @@ object KmpSdk{
             observeFavoriteIds = koin.get(),
             toggleFavorite = koin.get(),
             scope = scope,
+            logger = storeLogger,
         )
 
     /** 商品詳細の Store を作る（iOS 用）。不要になったら [ProductDetailStore.close] を呼ぶこと */

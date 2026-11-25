@@ -10,5 +10,8 @@ internal sealed interface ProductListAction {
     data class ItemsUpdated(
         val items: List<ProductListItem>,
         val favoriteCount: Int,
-    ) : ProductListAction
+    ) : ProductListAction {
+        // ログが長くなりすぎないよう、件数だけ出す
+        override fun toString() = "ItemsUpdated(items=${items.size}, favoriteCount=$favoriteCount)"
+    }
 }

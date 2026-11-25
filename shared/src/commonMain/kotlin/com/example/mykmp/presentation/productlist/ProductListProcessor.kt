@@ -24,15 +24,20 @@ internal class ProductListProcessor(
     private val toggleFavorite: ToggleFavoriteUseCase,
 ) : Processor<ProductListIntent, ProductListAction, ProductListSideEffect> {
 
+    /**
+     * Store を作った直後に 1 回だけ動く。一覧とお気に入りの監視を始め、商品を取得する。
+     * 監視（終わらない Flow）と取得（1 回で終わる処理）を同時に動かすので channelFlow を使う。
+     * 開いたときは、最近取得していれば API を呼ばない（force = false）。
+     */
+    override fun bootstrap(): Flow<Output> = channelFlow {
+        launch { items().collect { send(it) } }
+        refresh(force = false) { send(it) }
+    }
+
     override fun process(intent: ProductListIntent): Flow<Output> =
         when (intent) {
-            // 監視（終わらない Flow）と取得（1 回で終わる処理）を同時に動かすので channelFlow を使う
-            ProductListIntent.Load -> channelFlow {
-                launch { items().collect { send(it) } }
-                refresh { send(it) }
-            }
-
-            ProductListIntent.Refresh -> flow { refresh { emit(it) } }
+            // 再読み込みボタンは、必ず API から取り直す
+            ProductListIntent.Refresh -> flow { refresh(force = true) { emit(it) } }
 
             is ProductListIntent.ClickProduct ->
                 flow { emit(ProcessorOutput.SideEffect(ProductListSideEffect.NavigateToDetail(intent.id))) }
@@ -67,9 +72,9 @@ internal class ProductListProcessor(
                 )
             }
 
-    private suspend fun refresh(send: suspend (Output) -> Unit) {
+    private suspend fun refresh(force: Boolean, send: suspend (Output) -> Unit) {
         send(ProcessorOutput.Action(ProductListAction.RefreshStarted))
-        when (val result = refreshProducts()) {
+        when (val result = refreshProducts(force)) {
             is DomainResult.Success -> send(ProcessorOutput.Action(ProductListAction.RefreshSucceeded))
             is DomainResult.Error -> send(ProcessorOutput.Action(ProductListAction.RefreshFailed(result.message)))
         }

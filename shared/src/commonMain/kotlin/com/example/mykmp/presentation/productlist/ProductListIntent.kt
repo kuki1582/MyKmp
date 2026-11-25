@@ -1,9 +1,10 @@
 package com.example.mykmp.presentation.productlist
 
+/**
+ * ユーザーの操作。画面を開いたときの処理（監視の開始と最初の取得）は
+ * Intent ではなく Processor.bootstrap() で Store が自動で行う。
+ */
 sealed interface ProductListIntent {
-    /** 画面の表示開始。一覧とお気に入りの監視を始め、最新の商品を取得する。Store を作った直後に 1 回だけ送る */
-    data object Load : ProductListIntent
-
     /** 最新の商品を取り直す（再読み込みボタン） */
     data object Refresh : ProductListIntent
 
