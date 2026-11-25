@@ -13,17 +13,13 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * shared の [ProductDetailStore] を画面回転などで作り直さないために持っておくだけの ViewModel。
  * Navigation の画面（NavBackStackEntry）ごとに作られ、戻るボタンで画面を閉じると破棄される。
+ * 最初の読み込みは Store を作った時点で自動で始まる（Processor.bootstrap）。
  */
 class ProductDetailViewModel(productId: String) : ViewModel() {
     private val store: ProductDetailStore = KmpSdk.createProductDetailStore(productId, viewModelScope)
 
     val state: StateFlow<ProductDetailUiState> = store.state
     val sideEffect: Flow<ProductDetailSideEffect> = store.sideEffect
-
-    init {
-        // 監視を始める Load は 1 回だけ送る
-        store.dispatch(ProductDetailIntent.Load)
-    }
 
     fun dispatch(intent: ProductDetailIntent) = store.dispatch(intent)
 }

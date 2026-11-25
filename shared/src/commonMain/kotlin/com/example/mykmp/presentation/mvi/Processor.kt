@@ -1,6 +1,7 @@
 package com.example.mykmp.presentation.mvi
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * Processor が出す結果。
@@ -17,4 +18,11 @@ internal sealed interface ProcessorOutput<out Action, out SideEffect> {
  */
 internal fun interface Processor<in Intent, out Action, out SideEffect> {
     fun process(intent: Intent): Flow<ProcessorOutput<Action, SideEffect>>
+
+    /**
+     * Store を作った直後に 1 回だけ動く処理（Bootstrapper）。
+     * 監視の開始や最初の読み込みなど、UI から Intent を送らなくても始めたい処理を書く。
+     * Store 自身が 1 回だけ呼ぶので、送り忘れや二重実行が起きない。
+     */
+    fun bootstrap(): Flow<ProcessorOutput<Action, SideEffect>> = emptyFlow()
 }

@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TestTimeSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -68,7 +70,7 @@ class ProductRepositoryImplTest {
             }
         }
 
-        repository(engine).refreshProducts()
+        repository(engine).refreshProducts(force = true)
 
         assertEquals(
             setOf(
@@ -115,6 +117,34 @@ class ProductRepositoryImplTest {
     }
 
     @Test
+    fun refreshProducts_skipsApiWhileCacheIsFresh_unlessForced() = runTest {
+        var productsRequests = 0
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/products" -> {
+                    productsRequests++
+                    respond(productsJson, HttpStatusCode.OK, jsonHeaders)
+                }
+                "/products/categories" -> respond(categoriesJson, HttpStatusCode.OK, jsonHeaders)
+                else -> respondError(HttpStatusCode.NotFound)
+            }
+        }
+        val timeSource = TestTimeSource()
+        val repository = ProductRepositoryImpl(
+            ProductRemoteDataSource(createHttpClient(engine)), local, timeSource, cacheDuration = 5.minutes,
+        )
+
+        repository.refreshProducts(force = false) // 初回：まだ取得していないので呼ぶ
+        timeSource += 4.minutes
+        repository.refreshProducts(force = false) // 5 分以内：呼ばない
+        repository.refreshProducts(force = true)  // 強制：呼ぶ
+        timeSource += 6.minutes
+        repository.refreshProducts(force = false) // 前回の強制取得から 5 分を過ぎた：呼ぶ
+
+        assertEquals(3, productsRequests)
+    }
+
+    @Test
     fun observeProducts_emitsProductsFromLocal() = runTest {
         local.products.value = listOf(cachedProduct.toEntity())
 
@@ -125,7 +155,7 @@ class ProductRepositoryImplTest {
     fun refreshFailure_keepsCachedProducts() = runTest {
         local.products.value = listOf(cachedProduct.toEntity())
 
-        val result = RefreshProductsUseCase(repository(failingEngine))()
+        val result = RefreshProductsUseCase(repository(failingEngine))(force = true)
 
         assertIs<DomainResult.Error>(result)
         assertEquals(listOf(cachedProduct.toEntity()), local.products.value)
@@ -140,7 +170,7 @@ class ProductRepositoryImplTest {
             }
         }
 
-        val result = RefreshProductsUseCase(repository(engine))()
+        val result = RefreshProductsUseCase(repository(engine))(force = true)
 
         assertIs<DomainResult.Error>(result)
     }

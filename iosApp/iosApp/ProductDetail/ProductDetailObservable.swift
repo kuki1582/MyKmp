@@ -14,8 +14,6 @@ final class ProductDetailObservable: ObservableObject {
     init(productId: String) {
         store = KmpSdk.shared.createProductDetailStore(productId: productId)
         state = store.state.value
-        // 監視を始める Load は 1 回だけ送る（.task は画面が出直すたびに呼ばれるので、ここで送る）
-        store.dispatch(intent: ProductDetailIntentLoad.shared)
     }
 
     deinit {

@@ -77,4 +77,6 @@ UI ──Intent──▶ Processor ──Action──▶ Reducer ──State─�
 | SideEffect | 1 回だけ届けるイベント |
 
 - 汎用の `Store<Intent, Action, State, SideEffect>` が全体をつなぎ、画面ごとには Processor と Reducer を書くだけにしている
+- 画面を開いたときの処理（監視の開始・最初の読み込み）は、Store を作った直後に `Processor.bootstrap()` が 1 回だけ動かす（UI から Intent を送る必要はない）
+- デバッグビルドでは `KmpSdk.enableLogging()` により、Store を通る Intent / Action / SideEffect がコンソールに出る
 - Store は Android の仕組みに依存しない。Android は `ViewModel` が `viewModelScope` で、iOS は `ObservableObject` が `storeScope()` で Store を持つ

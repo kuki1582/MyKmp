@@ -25,14 +25,17 @@ internal class ProductDetailProcessor(
     private val toggleFavorite: ToggleFavoriteUseCase,
 ) : Processor<ProductDetailIntent, ProductDetailAction, ProductDetailSideEffect> {
 
+    /**
+     * Store を作った直後に 1 回だけ動く。お気に入りの監視を始め、詳細を取得する。
+     * お気に入りの監視（終わらない Flow）と詳細の取得を同時に動かすので channelFlow を使う。
+     */
+    override fun bootstrap(): Flow<Output> = channelFlow {
+        launch { favoriteChanges().collect { send(it) } }
+        load { send(it) }
+    }
+
     override fun process(intent: ProductDetailIntent): Flow<Output> =
         when (intent) {
-            // お気に入りの監視（終わらない Flow）と詳細の取得を同時に動かすので channelFlow を使う
-            ProductDetailIntent.Load -> channelFlow {
-                launch { favoriteChanges().collect { send(it) } }
-                load { send(it) }
-            }
-
             ProductDetailIntent.Retry -> flow { load { emit(it) } }
 
             ProductDetailIntent.ToggleFavorite -> flow {

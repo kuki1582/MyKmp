@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ProductListStoreTest {
     private val productA = Product(id = "1", name = "医療機器A", price = 120, categoryName = "医療")
@@ -24,6 +25,8 @@ class ProductListStoreTest {
     private val productRepository = FakeProductRepository()
     private val favoriteRepository = FakeFavoriteRepository()
 
+    private val logs = mutableListOf<String>()
+
     private fun TestScope.store() = ProductListStore(
         observeProducts = ObserveProductsUseCase(productRepository),
         observeFavoriteIds = ObserveFavoriteIdsUseCase(favoriteRepository),
@@ -31,15 +34,15 @@ class ProductListStoreTest {
         toggleFavorite = ToggleFavoriteUseCase(favoriteRepository),
         // dispatch した処理がすぐ進むように Unconfined にし、テスト終了時に止まる backgroundScope にぶら下げる
         scope = CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+        logger = { logs += it },
     )
 
     @Test
-    fun load_combinesProductsAndFavorites() = runTest {
+    fun bootstrap_combinesProductsAndFavorites() = runTest {
         productRepository.onRefresh = { productRepository.products.value = listOf(productA, productB) }
         favoriteRepository.ids.value = setOf("2")
         val store = store()
 
-        store.dispatch(ProductListIntent.Load)
 
         assertEquals(
             ProductListUiState(
@@ -57,7 +60,6 @@ class ProductListStoreTest {
     fun toggleFavorite_updatesItemsThroughCombinedFlow() = runTest {
         productRepository.products.value = listOf(productA, productB)
         val store = store()
-        store.dispatch(ProductListIntent.Load)
 
         store.dispatch(ProductListIntent.ToggleFavorite("1"))
 
@@ -71,7 +73,6 @@ class ProductListStoreTest {
         productRepository.onRefresh = { error("network") }
         val store = store()
 
-        store.dispatch(ProductListIntent.Load)
 
         assertEquals("失敗した", store.state.value.errorMessage)
         assertEquals(listOf(productA), store.state.value.items.map { it.product })
@@ -82,7 +83,6 @@ class ProductListStoreTest {
         productRepository.products.value = listOf(productA)
         favoriteRepository.failToggle = true
         val store = store()
-        store.dispatch(ProductListIntent.Load)
 
         store.dispatch(ProductListIntent.ToggleFavorite("1"))
 
@@ -91,6 +91,29 @@ class ProductListStoreTest {
             store.sideEffect.first(),
         )
         assertEquals(listOf(false), store.state.value.items.map { it.isFavorite })
+    }
+
+    @Test
+    fun bootstrapUsesCache_refreshIntentForcesFetch() = runTest {
+        val store = store()
+
+        store.dispatch(ProductListIntent.Refresh)
+
+        // 開いたとき（bootstrap）は force = false、再読み込みボタンは force = true
+        assertEquals(listOf(false, true), productRepository.refreshForces)
+    }
+
+    @Test
+    fun logger_recordsBootstrapIntentAndAction() = runTest {
+        productRepository.products.value = listOf(productA)
+        val store = store()
+
+        store.dispatch(ProductListIntent.ClickProduct("1"))
+
+        assertTrue("[ProductList] Bootstrap" in logs)
+        assertTrue("[ProductList] Action: ItemsUpdated(items=1, favoriteCount=0)" in logs)
+        assertTrue("[ProductList] Intent: ClickProduct(id=1)" in logs)
+        assertTrue("[ProductList] SideEffect: NavigateToDetail(id=1)" in logs)
     }
 
     @Test
@@ -109,7 +132,12 @@ private class FakeProductRepository : ProductRepository {
 
     override fun observeProducts(): Flow<List<Product>> = products
 
-    override suspend fun refreshProducts() = onRefresh()
+    val refreshForces = mutableListOf<Boolean>()
+
+    override suspend fun refreshProducts(force: Boolean) {
+        refreshForces += force
+        onRefresh()
+    }
 
     override suspend fun getProductDetail(id: String) = error("一覧のテストでは使わない")
 }
